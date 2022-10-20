@@ -1,4 +1,5 @@
-from json import loads, dump
+from json import loads, dump, load
+from PIL import Image, ImageTk
 
 from canvas import *
 
@@ -56,10 +57,6 @@ def continue_forward():
     )
 
 
-def products_page():
-    frame.delete("all")
-
-
 def registration():
     frame.delete("all")
     home()
@@ -108,7 +105,6 @@ def login_window():
 
 
 def login_check():
-
     users = []
     with open("./database.json", "r") as file:
         for line in file:
@@ -131,7 +127,7 @@ def login_check():
         text="Wrong username or password!",
         font=("Arial", 20),
         fill="red",
-        )
+    )
     return False
 
 
@@ -217,6 +213,68 @@ def validity_check(information: dict):
             return True
     return False
 
+
+def products_page():
+    frame.delete("all")
+    global product_info
+    with open("./products.json", "r") as stock:
+        product_info = load(stock)
+    print(product_info.items())
+    x = 150
+    y = 50
+
+    for name, item in product_info.items():
+        image = ImageTk.PhotoImage(Image.open(item["image"]).resize((100, 130)))
+        images.append(image)
+        frame.create_text(
+            x, y,
+            text=name,
+            font=("Comic Sans MS", 12),
+            fill="pink"
+        )
+        frame.create_image(
+            x, y + 100,
+            image=image
+        )
+        if item["quantity"] >= 1:
+            color = "green"
+            text = f"In stock : {item['quantity']}"
+            buy_button = tk.Button(
+                root,
+                text="Buy",
+                font=("Comic Sans MS", 15),
+                bg="green",
+                fg="white",
+                width=5,
+                command=lambda name=name: buy_product(name)
+            )
+            frame.create_window(x, y + 230, window=buy_button)
+        else:
+            color = "red"
+            text = "Out of stock"
+        frame.create_text(
+            x, y + 180,
+            text=text,
+            fill=color,
+            font=("Comic Sans MS", 15)
+        )
+        x += 200
+        if x > 550:
+            x = 150
+            y += 230
+
+
+def buy_product(name_of_product):
+
+    product_info[name_of_product]["quantity"] -= 1
+
+    with open("./products.json", "w") as stock:
+        dump(product_info, stock)
+
+    products_page()
+
+
+images = []
 
 first_name_field = tk.Entry(
     root,
